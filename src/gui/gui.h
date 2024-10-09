@@ -5,7 +5,6 @@
 #ifndef GUI_H
 #define GUI_H
 
-#include <imgui_impl_opengl3.h>
 #include "../app/AppContext.h"
 #include "../renderContext/renderContext.h"
 
@@ -13,19 +12,27 @@ class Gui {
     AppContext &appContext;
     RenderContext &renderContext;
 
-    bool show_demo_window = true;
-    bool show_another_window = false;
+    bool show_fps_window = false;
+
+    const uint rightWindowWidth = 256;
+    std::vector<float> frames;
+    void showFPSWindow();
+    void showOptionWindow();
+    void showScene() const;
+    void showCameraModeDropDown() const;
 
 public:
     explicit Gui(AppContext &appContext, RenderContext &renderContext);
 
-    static void render() { ImGui::Render(); }
+    static void postRender();
 
-    static void renderDrawData() { ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData()); }
-
-    static void newFrame();
+    static void preRender();
 
     void draw();
+
+
+
+    void updateCameraPos(ImVec2 canvas_sz) const;
 
     ~Gui();
 };

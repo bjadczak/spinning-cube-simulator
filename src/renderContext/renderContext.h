@@ -20,8 +20,9 @@ public:
     ~RenderContext();
 
     static void pollWindowEvents() { glfwPollEvents(); }
-    void swapBuffers() const { glfwSwapBuffers(window); }
-    void clearWindow() const;
+    void postRender() const;
+
+    void preRender() const;
     [[nodiscard]] bool shouldWindowClose() const { return glfwWindowShouldClose(window); }
     [[nodiscard]] GLFWwindow* getWindow() const { return window; }
     [[nodiscard]] const char *getGLSLVersion() const { return glsl_version; }

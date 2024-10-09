@@ -19,17 +19,17 @@ RenderContext::RenderContext(AppContext &appContext) : appContext(appContext){
 
     // Decide GL+GLSL versions
 #if  defined(__APPLE__)
-    // GL 4.0 + GLSL 400
+    // GL 4.1 + GLSL 400
     glsl_version = "#version 400";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // Required on Mac
 #else
     // GL 4.0 + GLSL 400
     glsl_version = "#version 400";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
 #endif
@@ -57,7 +57,12 @@ RenderContext::~RenderContext() {
     glfwTerminate();
 }
 
-void RenderContext::clearWindow() const {
+void RenderContext::postRender() const {
+    pollWindowEvents();
+    glfwSwapBuffers(window);
+}
+
+void RenderContext::preRender() const {
     int display_w, display_h;
     glfwGetFramebufferSize(window, &display_w, &display_h);
     glViewport(0, 0, display_w, display_h);
