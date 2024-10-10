@@ -6,7 +6,7 @@
 #define MILLINGOBJECT_H
 
 #include "../mesh/mesh.h"
-
+#include <memory>
 
 
 class millingObject {
