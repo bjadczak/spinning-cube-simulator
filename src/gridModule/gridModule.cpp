@@ -4,8 +4,8 @@
 
 #include "gridModule.h"
 #include "../objectsOpenGL/vertex.h"
+#include "../QuadUtils.h"
 
-//TODO Implement
 GridModule::GridModule (AppContext &appContext) :
     appContext(appContext),
     shader(std::make_unique<ShaderProgram>("res/shaders/gridModule/grid.vert", "res/shaders/gridModule/grid.frag"))

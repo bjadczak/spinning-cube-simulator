@@ -77,6 +77,9 @@ add_executable(MillingApplication
         src/objectsOpenGL/EBO.cpp
         src/mesh/mesh.h
         src/mesh/mesh.cpp
+        src/millingObject/millingObject.cpp
+        src/millingObject/millingObject.h
+        src/QuadUtils.h
 )
 
 # Link libraries
