@@ -14,7 +14,7 @@ class Gui {
 
     bool show_fps_window = false;
 
-    const uint rightWindowWidth = 256;
+    const int rightWindowWidth = 256;
     std::vector<float> frames;
     void showFPSWindow();
     void showOptionWindow();
