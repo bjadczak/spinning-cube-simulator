@@ -136,7 +136,7 @@ void Gui::showScene () const
     // add rendered texture to ImGUI scene window
     uint64_t textureID = appContext.frameBufferManager->get_texture();
     const auto canvas_sz = ImVec2{viewportPanelSize.x, viewportPanelSize.y};
-    ImGui::Image(reinterpret_cast<ImTextureID>(textureID), canvas_sz, ImVec2{0, 1}, ImVec2{1, 0});
+    ImGui::Image(textureID, canvas_sz, ImVec2{0, 1}, ImVec2{1, 0});
 
     updateCameraPos(canvas_sz);
 
