@@ -50,8 +50,8 @@ private:
     bool firstClick = true;
 
     // Adjust the speed of the camera and it's sensitivity when looking around
-    const float lowSpeed = 0.01f;
-    const float highSpeed = 0.1f;
+    const float lowSpeed = 0.1f;
+    const float highSpeed = 2.f;
     float speed = lowSpeed;
     float sensitivity = 100.0f;
 

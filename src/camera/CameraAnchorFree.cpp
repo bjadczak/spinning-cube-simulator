@@ -121,6 +121,16 @@ void CameraAnchorFree::processKeyboardAnchor(CameraMovement direction, float del
         anchor -= right * velocity;
     if (direction == RIGHT)
         anchor += right * velocity;
+    if (direction == UP)
+    {
+        float velocity = zoomSensitivity * 0.5f;
+        position += front * velocity;
+    }
+    if (direction == DOWN)
+    {
+        float velocity = zoomSensitivity * 0.5f;
+        position -= front * velocity;
+    }
 
     //TODO move orientation
     updateDirections();

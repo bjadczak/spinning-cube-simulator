@@ -13,11 +13,25 @@
 #include "../camera/CameraAnchorFree.h"
 #include "../camera/CameraGameLike.h"
 #include "../framebufferManager/FrameBufferManager.h"
+#include "../millingObjects/millingPlate.h"
+#include "../light/PointLight.h"
+#include "../millingObjects/pathObject.h"
+#include "../millingObjects/mill.h"
 
 struct AppContext {
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     std::unique_ptr<BaseCamera> camera;
     std::unique_ptr<FrameBufferManager> frameBufferManager;
+
+    std::unique_ptr<MillingPlate> millingObject;
+    std::unique_ptr<Mill> mill;
+    std::unique_ptr<PathObject> pathObject;
+
+    //glm::vec2 heightMapSize;
+    glm::vec<2, int> baseResolution;
+    glm::vec3 baseDimensions;
+
+    std::unique_ptr<PointLight> light;
 
     CameraType cameraType;
 
@@ -44,12 +58,12 @@ struct AppContext {
             case CameraType::GAMELIKE:
                 if(camera != nullptr)
                     camera.reset();
-            camera = std::make_unique<CameraGameLike>(1920, 1080, CameraMode::FREE, glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.f), glm::vec3(-glm::pi<float>() / 4, 0, 0));
+            camera = std::make_unique<CameraGameLike>(1920, 1080, CameraMode::FREE, glm::vec3(0.0f, 60.0f, 160.0f), glm::vec3(0.f), glm::vec3(-glm::pi<float>() / 4, 0, 0));
             break;
             case CameraType::FREEANCHOR:
                 if(camera != nullptr)
                     camera.reset();
-            camera = std::make_unique<CameraAnchorFree>(1920, 1080, CameraMode::ANCHOR, glm::vec3(0.0f, 3.0f, 3.0f), glm::vec3(0.f), glm::vec3(-glm::pi<float>() / 4, 0, 0));
+            camera = std::make_unique<CameraAnchorFree>(1920, 1080, CameraMode::ANCHOR, glm::vec3(0.0f, 60.0f, 160.0f), glm::vec3(0.f), glm::vec3(-glm::pi<float>() / 4, 0, 0));
             break;
             default:
                 throw std::invalid_argument("Invalid camera type");
@@ -66,7 +80,6 @@ struct AppContext {
     AppContext()
     {
         allocateCamera(CameraType::GAMELIKE);
-
     }
 };
 

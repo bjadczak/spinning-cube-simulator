@@ -22,24 +22,34 @@ Mesh::Mesh (
     // Generates Element Buffer Object and links it to indices
     EBO mEBO(indices);
     // Links VBO attributes such as coordinates and colors to VAO
-    mVAO.LinkAttrib(mVBO, 0, 3, GL_FLOAT, sizeof(Vertex), (void*)0);
-    mVAO.LinkAttrib(mVBO, 1, 2, GL_FLOAT, sizeof(Vertex), (void*)(3 * sizeof(float)));
-    mVAO.LinkAttrib(mVBO, 2, 3, GL_FLOAT, sizeof(Vertex), (void*)(5 * sizeof(float)));
+    if(vertices.size() > 0) {
+        mVAO.LinkAttrib(mVBO, 0, 3, GL_FLOAT, sizeof(Vertex), (void*)0);
+        mVAO.LinkAttrib(mVBO, 1, 2, GL_FLOAT, sizeof(Vertex), (void*)(3 * sizeof(float)));
+        mVAO.LinkAttrib(mVBO, 2, 3, GL_FLOAT, sizeof(Vertex), (void*)(5 * sizeof(float)));
+    }
     // Unbind all to prevent accidentally modifying them
     mVAO.Unbind();
     mVBO.Unbind();
     mEBO.Unbind();
 }
 
-void Mesh::Draw()
+void Mesh::Draw(int instanceCount)
 {
     mVAO.Bind();
 
     // Set glMode
     glPolygonMode(GL_FRONT_AND_BACK, glPolygonModeSet);
 
-    // Draw the actual mesh
-    glDrawElements(glDrawElementMode, indices.size(), GL_UNSIGNED_INT, 0);
+    if(indices.empty())
+    {
+        glDrawArraysInstanced(glDrawElementMode, 0, vertices.size(),instanceCount);
+    }
+    else
+    {
+        // Draw the actual mesh
+        glDrawElementsInstanced(glDrawElementMode, indices.size(), GL_UNSIGNED_INT, 0, instanceCount);
+    }
+
 }
 
 void Mesh::Update (std::vector<Vertex> &vertices, std::vector<GLuint> &indices)

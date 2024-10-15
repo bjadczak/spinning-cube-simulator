@@ -24,7 +24,19 @@ std::string get_file_contents(const char* filename)
         in.close();
         return(contents);
     }
-    throw(errno);
+    throw errno;
+}
+
+ShaderProgram::ShaderProgram(
+    const char *vertexFile,
+    const char *fragmentFile):
+        vertexFile(vertexFile),
+        fragmentFile(fragmentFile),
+        tessellationEvaluationFile(nullptr),
+        tessellationControlFile(nullptr),
+        geometryFile(nullptr)
+{
+    setUpShader(ID);
 }
 
 // Constructor that build the Shader Program from 2 different shaders
@@ -36,7 +48,21 @@ ShaderProgram::ShaderProgram(
         vertexFile(vertexFile),
         fragmentFile(fragmentFile),
         tessellationEvaluationFile(tessellationEvaluationFile),
-        tessellationControlFile(tessellationControlFile)
+        tessellationControlFile(tessellationControlFile),
+        geometryFile(nullptr)
+{
+    setUpShader(ID);
+}
+
+ShaderProgram::ShaderProgram(
+    const char *vertexFile,
+    const char *fragmentFile,
+    const char *geometryFile) :
+        vertexFile(vertexFile),
+        fragmentFile(fragmentFile),
+        tessellationEvaluationFile(nullptr),
+        tessellationControlFile(nullptr),
+        geometryFile(geometryFile)
 {
     setUpShader(ID);
 }
@@ -58,6 +84,7 @@ void ShaderProgram::setUniform(const std::string &name, ShaderType &&value, unsi
                    [&](bool &v) { glUniform1i(glGetUniformLocation(ID, name.c_str()), (int) v); },
                    [&](int &v) { glUniform1i(glGetUniformLocation(ID, name.c_str()), v); },
                    [&](float &v) { glUniform1f(glGetUniformLocation(ID, name.c_str()), v); },
+                   [&](glm::vec2 &v) { glUniform2fv(glGetUniformLocation(ID, name.c_str()), 1, &v[0]); },
                    [&](glm::vec3 &v) { glUniform3fv(glGetUniformLocation(ID, name.c_str()), 1, &v[0]); },
                    [&](glm::vec4 &v) { glUniform4fv(glGetUniformLocation(ID, name.c_str()), 1, &v[0]); },
                    [&](glm::mat4 &v) { glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &v[0][0]); },
@@ -144,6 +171,14 @@ bool ShaderProgram::setUpShader (GLuint &shaderProgramID)
         createShader(TCS, TCSSource, GL_TESS_CONTROL_SHADER, "TCS");
     }
 
+    GLuint GEOM;
+    if(geometryFile)
+    {
+        std::string GEOMCode = get_file_contents(geometryFile);
+        const char* GEOMSource = GEOMCode.c_str();
+        createShader(GEOM, GEOMSource, GL_GEOMETRY_SHADER, "GEOM");
+    }
+
     // Create Shader Program Object and get its reference
     shaderProgramID = glCreateProgram();
     // Attach the Vertex and Fragment Shaders to the Shader Program
@@ -151,6 +186,7 @@ bool ShaderProgram::setUpShader (GLuint &shaderProgramID)
     glAttachShader(shaderProgramID, fragmentShader);
     if(tessellationEvaluationFile) glAttachShader(shaderProgramID, TES);
     if(tessellationControlFile) glAttachShader(shaderProgramID, TCS);
+    if(geometryFile) glAttachShader(shaderProgramID, GEOM);
 
     // Wrap-up/Link all the shaders together into the Shader Program
     glLinkProgram(shaderProgramID);
@@ -162,6 +198,7 @@ bool ShaderProgram::setUpShader (GLuint &shaderProgramID)
     glDeleteShader(fragmentShader);
     if(tessellationEvaluationFile) glDeleteShader(TES);
     if(tessellationControlFile) glDeleteShader(TCS);
+    if(geometryFile) glDeleteShader(GEOM);
 
     return ret;
 }

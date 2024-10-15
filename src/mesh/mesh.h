@@ -27,7 +27,7 @@ public:
     void Update(std::vector <Vertex>& vertices, std::vector <GLuint>& indices);
 
     // Draws the mesh
-    void Draw();
+    void Draw(int instanceCount = 1);
 };
 
 

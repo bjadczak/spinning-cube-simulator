@@ -7,6 +7,8 @@
 #include <imgui.h>
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "../gCode/gCodeLoader.h"
+#include "../gCode/gCodeParser.h"
 
 void Gui::showFPSWindow() {
     static ImGuiWindowFlags flags =
@@ -52,6 +54,12 @@ void Gui::showOptionWindow()
     ImGui::Checkbox("FPS Window", &show_fps_window);
     showCameraModeDropDown();
 
+
+    if(ImGui::Button("Load gCode"))
+    {
+        loadGCode();
+    }
+
     ImGui::End();
 }
 
@@ -87,6 +95,102 @@ void Gui::draw() {
     showScene();
 
     showOptionWindow();
+
+    {
+        ImGui::Begin("3C Milling Simulator");
+        ImGui::SeparatorText("Simulation");
+        ImGui::BeginDisabled(appContext.mill->getPath().empty() || appContext.mill->pathFinished());
+        if(!appContext.mill->isThreadRunning()) {
+            if(ImGui::Button("Run")) {
+                appContext.mill->startMilling(appContext.millingObject->heightMapData, appContext.baseDimensions);
+            }
+        } else {
+            if(ImGui::Button("Stop")) {
+                appContext.mill->signalStop();
+            }
+        }
+        ImGui::EndDisabled();
+        ImGui::BeginDisabled(appContext.mill->getPath().empty() || appContext.mill->pathFinished() ||
+                             appContext.mill->isThreadRunning());
+        ImGui::SameLine();
+        if (ImGui::Button("Instant")) {
+            appContext.mill->startInstant(appContext.millingObject->heightMapData, appContext.baseDimensions);
+        }
+        ImGui::EndDisabled();
+        ImGui::BeginDisabled(appContext.mill->isThreadRunning());
+        ImGui::SameLine();
+        if (ImGui::Button("Reset Block##block")) {
+            appContext.millingObject->generateMap(appContext.baseResolution, appContext.baseDimensions.y);
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Reset Mill##Mill")) {
+            appContext.mill->reset();
+        }
+
+        float velocity = appContext.mill->getVelocity();
+        if (ImGui::DragFloat("Velocity (mm/s)", &velocity, 1, 1, 1000))
+            appContext.mill->setVelocity(velocity);
+
+
+        if(ImGui::SliderInt("Base Resolution", &(appContext.baseResolution.x), 10, 2000))
+        {
+            appContext.baseResolution.y = appContext.baseResolution.x;
+            appContext.millingObject->generateMap(appContext.baseResolution, appContext.baseDimensions.y);
+        }
+        if(ImGui::DragFloat("Base size x (mm)", glm::value_ptr(appContext.baseDimensions) + 0, 1, 10, 500))
+        {
+            appContext.millingObject->generateMap(appContext.baseResolution, appContext.baseDimensions.y);
+            appContext.mill->reset();
+        }
+        if(ImGui::DragFloat("Base size y (mm)", glm::value_ptr(appContext.baseDimensions) + 1, 1, 10, 100))
+        {
+            appContext.millingObject->generateMap(appContext.baseResolution, appContext.baseDimensions.y);
+            appContext.mill->reset();
+        }
+        if(ImGui::DragFloat("Base size z (mm)", glm::value_ptr(appContext.baseDimensions) + 2, 1, 10, 500))
+        {
+            appContext.millingObject->generateMap(appContext.baseResolution, appContext.baseDimensions.y);
+            appContext.mill->reset();
+        }
+        ImGui::SeparatorText("Mill");
+        ImGui::Text("Type: ");
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Flat", appContext.mill->getType() == Flat)) {
+            appContext.mill->setType(Flat);
+        }
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Spherical", appContext.mill->getType() == Spherical)) {
+            appContext.mill->setType(Spherical);
+        }
+
+        float radius = appContext.mill->getRadius();
+        if (ImGui::DragFloat("Radius (mm)", &radius, 0.5, 0.5, 50)) {
+            appContext.mill->setRadius(radius);
+            if (appContext.mill->getHeight() < 2 * appContext.mill->getRadius())
+                appContext.mill->setHeight(2 * appContext.mill->getRadius());
+        }
+        float height = appContext.mill->getHeight();
+        if (ImGui::DragFloat("Height (mm)", &height, 0.5, 0.5, 100)) {
+            appContext.mill->setHeight(height);
+            if (appContext.mill->getRadius() > 0.5f * appContext.mill->getHeight())
+                appContext.mill->setRadius(0.5f * appContext.mill->getHeight());
+        }
+         ImGui::EndDisabled();
+
+        ImGui::End();
+    }
+
+    {
+        ImGui::Begin("OpenGL Texture Display");
+
+        // Set the ImGui window size to fit the texture if needed
+        ImVec2 texture_size(128, 128);  // Replace with the actual size of your texture
+
+        // Display the texture within the ImGui window
+        ImGui::Image(ImTextureID((void *) (intptr_t) appContext.millingObject->heightMap->getID()), texture_size);
+
+        ImGui::End();
+    }
 
     // FPS Counter
     ImGuiIO &io = ImGui::GetIO();
@@ -168,6 +272,41 @@ void Gui::showCameraModeDropDown() const {
     }
 }
 
+void Gui::loadGCode() const
+{
+    std::string strPath = GCodeLoader::chooseFile();
+    std::vector<glm::vec3> path = GCodeParser::parse(strPath);
+
+    if(appContext.pathObject == nullptr)
+    {
+        appContext.pathObject = std::make_unique<PathObject>(path);
+    }
+    else
+    {
+        appContext.pathObject->generateMesh(path);
+    }
+
+    std::string millType = strPath.substr(strPath.size()-3, 1);
+    switch(millType[0]) {
+        case 'k':
+            appContext.mill->setType(Spherical);
+        break;
+        case 'f':
+            appContext.mill->setType(Flat);
+        break;
+        default:
+            throw std::runtime_error("Wrong file extension");
+    }
+
+    std::string millDiameter = strPath.substr(strPath.size()-2, 2);
+    float millRadius = std::stoi(millDiameter) / 2.f;
+    appContext.mill->setRadius(millRadius);
+    appContext.mill->setHeight(millRadius*4);
+
+    appContext.mill->setPath(path);
+
+}
+
 void Gui::updateCameraPos (const ImVec2 canvas_sz) const
 {
     ImGui::SetCursorPos(ImVec2{0, 0});
@@ -215,8 +354,11 @@ void Gui::updateCameraPos (const ImVec2 canvas_sz) const
         {
             appContext.camera->processKeyboard(CameraMovement::RIGHT, 0);
         }
-
-        if (io.KeyCtrl)
+#if defined(__APPLE__)
+        if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_LeftSuper)))
+#else
+        if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_LeftCtrl)))
+#endif
         {
             appContext.camera->processKeyboard(CameraMovement::DOWN, 0);
         }

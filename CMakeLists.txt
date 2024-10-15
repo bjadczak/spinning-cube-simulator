@@ -16,6 +16,9 @@ endif()
 # Shader files
 file(GLOB SHADER_FILES "${CMAKE_SOURCE_DIR}/res/shaders/*")
 
+# File dialog
+add_subdirectory(${CMAKE_SOURCE_DIR}/dep/nfd)
+
 # Dear ImGui
 set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/dep/imgui)
 include_directories(${IMGUI_DIR} ${IMGUI_DIR}/backends)
@@ -77,14 +80,29 @@ add_executable(MillingApplication
         src/objectsOpenGL/EBO.cpp
         src/mesh/mesh.h
         src/mesh/mesh.cpp
-        src/millingObject/millingObject.cpp
-        src/millingObject/millingObject.h
         src/QuadUtils.h
+        src/texture/texture.cpp
+        src/texture/texture.h
+        src/light/PointLight.h
+        src/gCode/gCodeParser.cpp
+        src/gCode/gCodeParser.h
+        src/gCode/gCodeLoader.cpp
+        src/gCode/gCodeLoader.h
+        src/millingObjects/pathObject.cpp
+        src/millingObjects/pathObject.h
+        src/millingObjects/mill.cpp
+        src/millingObjects/mill.h
+        src/alghorithm/Bresenham.cpp
+        src/millingObjects/millingPlate.h
+        src/millingObjects/millingPlate.cpp
+        src/millingObjects/millingHead.cpp
+        src/millingObjects/millingHead.h
 )
 
 # Link libraries
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")             # macOS
     target_link_libraries(MillingApplication
+            PRIVATE nfd
             ${CMAKE_SOURCE_DIR}/dep/lib/libglfw.3.4.dylib
             ${CMAKE_SOURCE_DIR}/dep/lib/libGLEW.2.2.0.dylib
             "-framework OpenGL"
@@ -97,6 +115,7 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")        # Windows
     find_package(OpenGL REQUIRED)
     include_directories( ${OPENGL_INCLUDE_DIRS})
     target_link_libraries(MillingApplication
+            PRIVATE nfd
             ${CMAKE_SOURCE_DIR}/dep/lib/glfw3.lib
             ${CMAKE_SOURCE_DIR}/dep/lib/glew32.lib
             ${OPENGL_LIBRARIES}

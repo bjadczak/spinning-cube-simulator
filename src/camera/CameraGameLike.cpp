@@ -116,8 +116,8 @@ CameraGameLike::CameraGameLike (
 ) :
         Position(position),
         FOVdeg(glm::pi<float>() / 4.0f),
-        nearPlane(0.1f),
-        farPlane(100.0f)
+        nearPlane(1.f),
+        farPlane(1000.0f)
 {
     BaseCamera::type = CameraType::GAMELIKE;
     BaseCamera::screenWidth = screenWidth;

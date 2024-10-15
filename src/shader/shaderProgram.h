@@ -16,7 +16,7 @@
 
 std::string get_file_contents(const char* filename);
 
-using ShaderType = std::variant<bool, int, float, glm::vec3, glm::vec4, glm::mat4, glm::vec3*>;
+using ShaderType = std::variant<bool, int, float, glm::vec2, glm::vec3, glm::vec4, glm::mat4, glm::vec3*>;
 
 class ShaderProgram
 {
@@ -25,10 +25,17 @@ public:
     GLuint ID;
     // Constructor that build the Shader Program from 2 different shaders
     ShaderProgram(
+        const char* vertexFile,
+        const char* fragmentFile);
+    ShaderProgram(
             const char* vertexFile,
             const char* fragmentFile,
-            const char* tessellationEvaluationFile = nullptr,
-            const char* tessellationControlFile = nullptr);
+            const char* tessellationEvaluationFile,
+            const char* tessellationControlFile);
+    ShaderProgram(
+        const char* vertexFile,
+        const char* fragmentFile,
+        const char* geometryFile);
 
     // Activates the Shader Program
     void Activate();
@@ -46,6 +53,7 @@ private:
     const char* fragmentFile;
     const char* tessellationEvaluationFile;
     const char* tessellationControlFile;
+    const char* geometryFile;
 
     bool setUpShader(GLuint &shaderProgramID);
 
