@@ -18,7 +18,7 @@ Mill::Mill(float height, float radius, glm::vec3 position, float velocity, float
     this->minHeight = minHeight;
     tMillPath = 0;
     head = std::make_unique<MillingHead>();
-    position = glm::vec3(0, 200, 0);
+    position = glm::vec3(0, 100, 0);
 }
 
 void Mill::render(ShaderProgram& shaderProgram)
@@ -74,7 +74,7 @@ void Mill::reset()
     signalStop();
     currentPathPoint = 0;
     tMillPath = 0;
-    position = glm::vec3(0, 0, 0);
+    position = glm::vec3(0, 100, 0);
 }
 
 void Mill::signalStop() { stopThreadSignal = true; }

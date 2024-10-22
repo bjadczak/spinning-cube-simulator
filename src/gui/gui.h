@@ -14,10 +14,11 @@ class Gui {
 
     bool show_fps_window = false;
 
-    const int rightWindowWidth = 256;
+    const int rightWindowWidth = 400;
     std::vector<float> frames;
     void showFPSWindow();
     void showOptionWindow();
+    void showMillingOptions();
     void showScene() const;
     void showCameraModeDropDown() const;
     void loadGCode() const;
