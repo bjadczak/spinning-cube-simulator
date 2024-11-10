@@ -216,7 +216,11 @@ void Gui::updateCameraPos (const ImVec2 canvas_sz) const
             appContext.camera->processKeyboard(CameraMovement::RIGHT, 0);
         }
 
-        if (io.KeyCtrl)
+#if defined(__APPLE__)
+        if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_LeftSuper)))
+#else
+        if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_LeftCtrl)))
+#endif
         {
             appContext.camera->processKeyboard(CameraMovement::DOWN, 0);
         }

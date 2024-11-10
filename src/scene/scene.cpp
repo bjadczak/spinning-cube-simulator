@@ -23,13 +23,15 @@ void Scene::update() {
 void Scene::render() {
     appContext.frameBufferManager->bind();
 
+    grid->draw();
+
     basicShader->Activate();
     basicShader->setUniform("model", glm::mat4(1.0f));
     basicShader->setUniform("projection", appContext.camera->getProjectionMatrix());
     basicShader->setUniform("view", appContext.camera->getViewMatrix());
     appContext.cube->render();
 
-    grid->draw();
+
     appContext.frameBufferManager->unbind();
 }
 
