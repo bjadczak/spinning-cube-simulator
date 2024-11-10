@@ -18,6 +18,8 @@ Scene::Scene(AppContext &appContext, RenderContext &renderContext) :
 }
 
 void Scene::update() {
+    static float rotation = 0.005f;
+    appContext.cube->model = glm::rotate(appContext.cube->model, rotation, appContext.cube->axis);
 }
 
 void Scene::render() {
@@ -26,7 +28,7 @@ void Scene::render() {
     grid->draw();
 
     basicShader->Activate();
-    basicShader->setUniform("model", glm::mat4(1.0f));
+    basicShader->setUniform("model", appContext.cube->model);
     basicShader->setUniform("projection", appContext.camera->getProjectionMatrix());
     basicShader->setUniform("view", appContext.camera->getViewMatrix());
     appContext.cube->render();

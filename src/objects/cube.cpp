@@ -62,12 +62,27 @@ Cube::Cube()
         20, 22, 21, 22, 20, 23
     };
     objectMesh = std::make_unique<Mesh>(vertices, indices, GL_FILL, GL_TRIANGLES);
+    axis = glm::vec3(1, 1, 1) - glm::vec3(0, 0.0001f, 0);
+    axis = glm::normalize(axis);
+    model = glm::mat4(1.0f);
+
+    std::vector<Vertex> axisVertices = {
+        {{0, 0.0001f, 0},     {},     {0, 0, 0}}, // Bottom
+        {{1, 1.0001f, 1},     {},     {0, 0, 0}}, // Top
+    };
+    std::vector<GLuint> axisIndices = {
+        0, 1
+    };
+
+    axisMesh = std::make_unique<Mesh>(axisVertices, axisIndices, GL_FILL, GL_LINES);
+
 }
 
 void Cube::render()
 {
     glDisable(GL_DEPTH_TEST);
     objectMesh->Draw();
+    axisMesh->Draw();
     glEnable(GL_DEPTH_TEST);
 }
 void Cube::update()

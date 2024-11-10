@@ -5,11 +5,17 @@
 #ifndef CUBE_H
 #define CUBE_H
 #include <memory>
+#include <glm/fwd.hpp>
+#include <glm/matrix.hpp>
+
 #include "../mesh/mesh.h"
 
 
 class Cube {
     std::unique_ptr<Mesh> objectMesh;
+    std::unique_ptr<Mesh> axisMesh;
+
+
 
 public:
     explicit Cube();
@@ -17,6 +23,9 @@ public:
     void render();
 
     void update();
+
+    glm::vec3 axis;
+    glm::mat4 model;
 };
 
 
