@@ -79,6 +79,10 @@ add_executable(SpinningCube
         src/mesh/mesh.cpp
         src/objects/cube.cpp
         src/objects/cube.h
+        src/simulation/cubeSimulation.cpp
+        src/simulation/cubeSimulation.h
+        src/objects/Line.cpp
+        src/objects/Line.h
 )
 
 # Link libraries

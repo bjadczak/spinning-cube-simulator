@@ -15,23 +15,32 @@ Scene::Scene(AppContext &appContext, RenderContext &renderContext) :
     grid = std::make_unique<GridModule>(appContext);
 
     appContext.cube = std::make_unique<Cube>();
+    appContext.cubeSimulation = std::make_unique<CubeSimulation>();
+    appContext.lastFrameTimeMs = glfwGetTime();
 }
 
 void Scene::update() {
-    static float rotation = 0.005f;
-    appContext.cube->model = glm::rotate(appContext.cube->model, rotation, appContext.cube->axis);
+    if(true/*appContext.running*/) {
+        float timeMs = glfwGetTime() * 1000;
+        int loopsToDo = static_cast<int>((timeMs - appContext.lastFrameTimeMs) / appContext.cubeSimulation->timeStepMs);
+        appContext.lastFrameTimeMs += loopsToDo * appContext.cubeSimulation->timeStepMs;
+        for (int i = 0; i < loopsToDo; i++) {
+            appContext.cubeSimulation->advanceByStep();
+        }
+        appContext.cubeSimulation->updateTrace();
+    } else {
+        appContext.lastFrameTimeMs = glfwGetTime() * 1000.f;
+    }
 }
 
 void Scene::render() {
     appContext.frameBufferManager->bind();
 
+    appContext.cubeSimulation->renderLine(*basicShader, *appContext.camera);
+
     grid->draw();
 
-    basicShader->Activate();
-    basicShader->setUniform("model", appContext.cube->model);
-    basicShader->setUniform("projection", appContext.camera->getProjectionMatrix());
-    basicShader->setUniform("view", appContext.camera->getViewMatrix());
-    appContext.cube->render();
+    appContext.cubeSimulation->renderCube(*basicShader, *appContext.camera, *appContext.cube);
 
 
     appContext.frameBufferManager->unbind();

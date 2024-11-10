@@ -11,6 +11,7 @@
 #include "../camera/CameraGameLike.h"
 #include "../framebufferManager/FrameBufferManager.h"
 #include "../objects/cube.h"
+#include "../simulation/cubeSimulation.h"
 
 struct AppContext {
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -18,6 +19,8 @@ struct AppContext {
     std::unique_ptr<FrameBufferManager> frameBufferManager;
 
     std::unique_ptr<Cube> cube;
+    std::unique_ptr<CubeSimulation> cubeSimulation;
+    float lastFrameTimeMs;
 
     CameraType cameraType;
 
