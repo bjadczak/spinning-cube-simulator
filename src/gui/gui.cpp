@@ -52,6 +52,34 @@ void Gui::showOptionWindow()
     ImGui::Checkbox("FPS Window", &show_fps_window);
     showCameraModeDropDown();
 
+    {
+     /*
+      * Simulation options
+      */
+        ImGui::SeparatorText("Simulation");
+        ImGui::Checkbox("Run", &appContext.isRunning);
+        if(ImGui::Button("Reset"))
+        {
+            appContext.lastFrameTimeMs = glfwGetTime() * 1000;
+            appContext.isRunning = false;
+            appContext.cubeSimulation->reset();
+        }
+        ImGui::Checkbox("Gravity On", &appContext.cubeSimulation->gravityOn);
+        ImGui::DragFloat("Simulation Step (ms)", &appContext.cubeSimulation->timeStepMs, 0.1f, 1.f, 100.f);
+        ImGui::DragInt("Trace Point Count", &appContext.cubeSimulation->traceSize, 1, 100, 2000);
+
+        ImGui::BeginDisabled(appContext.isRunning);
+        {
+            bool changed = false;
+            changed |= ImGui::DragFloat("Size", &appContext.cubeSimulation->cubeSize, 0.01f, 0.1f, 5.0f);
+            changed |= ImGui::DragFloat("Density", &appContext.cubeSimulation->cubeDensity, 0.01f, 0.1f, 5.0f);
+            changed |= ImGui::DragFloat("Tilt (deg)", &appContext.cubeSimulation->cubeTilt, 0.01f, -180, 180);
+            changed |= ImGui::DragFloat("Angular Velocity", &appContext.cubeSimulation->cubeAngleVelocity, 0.1f, 0, 100);
+            if(changed) appContext.cubeSimulation->reset();
+            ImGui::EndDisabled();
+        }
+    }
+
     ImGui::End();
 }
 

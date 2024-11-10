@@ -24,6 +24,8 @@ struct AppContext {
 
     CameraType cameraType;
 
+    bool isRunning = false;
+
     bool guiFocus = true;
 
     float cameraSensitivity = 0.8f;

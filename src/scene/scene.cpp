@@ -20,7 +20,7 @@ Scene::Scene(AppContext &appContext, RenderContext &renderContext) :
 }
 
 void Scene::update() {
-    if(true/*appContext.running*/) {
+    if(appContext.isRunning) {
         float timeMs = glfwGetTime() * 1000;
         int loopsToDo = static_cast<int>((timeMs - appContext.lastFrameTimeMs) / appContext.cubeSimulation->timeStepMs);
         appContext.lastFrameTimeMs += loopsToDo * appContext.cubeSimulation->timeStepMs;
