@@ -23,6 +23,8 @@ class CubeSimulation {
     std::vector<glm::vec3> tracePoints;
 
     std::unique_ptr<Line> line;
+    std::unique_ptr<Mesh> gravityVector;
+    std::unique_ptr<Mesh> gravityPlane;
 
     glm::vec3 rotationAxisToStraighten{};
     float angleToStraighten;
@@ -44,7 +46,8 @@ public:
     void updateTrace();
 
     void renderCube(ShaderProgram& shader, const BaseCamera& camera, Cube& cube) const;
-    void renderLine(const ShaderProgram& shader, const BaseCamera& camera) const;
+    void renderLine(ShaderProgram& shader, const BaseCamera& camera) const;
+    void renderGravityLine(ShaderProgram& shader, const BaseCamera& camera) const;
 
     glm::vec3 dW_dt(glm::vec3 N, glm::vec3 W) const;
     static glm::quat dQ_dt(glm::quat Q, glm::vec3 W);

@@ -37,6 +37,7 @@ void Scene::render() {
     appContext.frameBufferManager->bind();
 
     appContext.cubeSimulation->renderLine(*basicShader, *appContext.camera);
+    appContext.cubeSimulation->renderGravityLine(*basicShader, *appContext.camera);
 
     grid->draw();
 

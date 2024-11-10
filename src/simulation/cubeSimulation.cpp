@@ -37,6 +37,38 @@ CubeSimulation::CubeSimulation() {
 
     line = std::make_unique<Line>();
 
+
+    {
+        std::vector<Vertex> arrow_vertices = {
+            {{0.0f, 0.0f, 0.0f},        {0.0f, 0.0f}, {-1.0f, -1.0f, -1.0f}},   // Podstawa
+            {{-1.0f, -1.0f, -1.0f},     {0.0f, 0.0f}, {-1.0f, -1.0f, -1.0f}},   // Czubek
+            {{-0.9f, -0.9f, -0.95f},    {0.0f, 0.0f}, {-1.0f, -1.0f, -1.0f}},  // Prawe skrzydło
+            {{-0.95f, -0.95f, -0.9f},   {0.0f, 0.0f}, {-1.0f, -1.0f, -1.0f}}, // Lewe skrzydło
+        };
+        std::vector<GLuint> indices = {
+            0, 1,  // Main line
+            1, 2,  // Right wing
+            1, 3,  // Left wing
+        };
+
+        gravityVector = std::make_unique<Mesh>(arrow_vertices, indices, GL_FILL, GL_LINES);
+    }
+
+    {
+        std::vector<Vertex> arrow_vertices = {
+            {{1, -1, 0},     {},     {1, 1, 1}}, // Punkt A
+            {{0, 1, -1},     {},     {1, 1, 1}}, // Punkt B
+            {{-1, 1, 0},     {},     {1, 1, 1}}, // Punkt C
+            {{0, -1, 1},     {},     {1, 1, 1}}  // Punkt D
+        };
+        std::vector<GLuint> indices = {
+            0, 1, 2, 2, 3, 0,
+        };
+
+        gravityPlane = std::make_unique<Mesh>(arrow_vertices, indices, GL_FILL, GL_TRIANGLES);
+    }
+
+
     reset();
 }
 
@@ -145,12 +177,38 @@ void CubeSimulation::renderCube(ShaderProgram& shader, const BaseCamera& camera,
     cube.render();
 }
 
-void CubeSimulation::renderLine(const ShaderProgram &shader, const BaseCamera &camera) const
+void CubeSimulation::renderLine(ShaderProgram &shader, const BaseCamera &camera) const
 {
+    shader.Activate();
     shader.setUniform("model", glm::mat4(1.0f));
     shader.setUniform("projection", camera.getProjectionMatrix());
     shader.setUniform("view", camera.getViewMatrix());
     line->render();
+}
+
+void CubeSimulation::renderGravityLine(ShaderProgram &shader, const BaseCamera &camera) const
+{
+    auto q = Q * glm::vec3(cubeSize);
+
+    auto model = glm::identity<glm::mat4>();
+    model = glm::rotate(model, angleToStraighten, rotationAxisToStraighten);
+    model = glm::translate(model, q / 2.f);
+
+    shader.Activate();
+    shader.setUniform("model", model);
+    shader.setUniform("projection", camera.getProjectionMatrix());
+    shader.setUniform("view", camera.getViewMatrix());
+    gravityVector->Draw();
+
+    model = glm::identity<glm::mat4>();
+
+    // Straighten up the cube
+    model = glm::rotate(model, angleToStraighten, rotationAxisToStraighten);
+
+    shader.setUniform("model", model);
+    glDisable(GL_DEPTH_TEST);
+    gravityPlane->Draw();
+    glEnable(GL_DEPTH_TEST);
 }
 
 
