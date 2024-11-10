@@ -9,6 +9,7 @@
 #include <glm/matrix.hpp>
 
 #include "../mesh/mesh.h"
+#include "../shader/shaderProgram.h"
 
 
 class Cube {
@@ -20,7 +21,7 @@ class Cube {
 public:
     explicit Cube();
 
-    void render();
+    void render(const ShaderProgram& shader, bool showCube, bool showDiagonal) const;
 
     void update();
 

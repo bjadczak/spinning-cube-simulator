@@ -161,7 +161,7 @@ void CubeSimulation::updateTrace() {
     line->updatePoints(tracePoints);
 }
 
-void CubeSimulation::renderCube(ShaderProgram& shader, const BaseCamera& camera, Cube& cube) const
+void CubeSimulation::renderCube(const ShaderProgram& shader, const BaseCamera& camera, Cube& cube, bool showCube, bool showDiagonal) const
 {
     auto model = glm::identity<glm::mat4>();
     model = model * glm::scale(model, glm::vec3(cubeSize));
@@ -170,31 +170,35 @@ void CubeSimulation::renderCube(ShaderProgram& shader, const BaseCamera& camera,
     model = glm::rotate(model, angleToStraighten, rotationAxisToStraighten);
 
     model = model * glm::toMat4(Q);
-    shader.Activate();
     shader.setUniform("model", model);
     shader.setUniform("projection", camera.getProjectionMatrix());
     shader.setUniform("view", camera.getViewMatrix());
-    cube.render();
+    cube.render(shader, showCube, showDiagonal);
 }
 
-void CubeSimulation::renderLine(ShaderProgram &shader, const BaseCamera &camera) const
+void CubeSimulation::renderLine(const ShaderProgram &shader, const BaseCamera &camera, bool showLine) const
 {
-    shader.Activate();
+    if(!showLine) return;
+    shader.setUniform("color", glm::vec3(1, 1, 1));
+    shader.setUniform("opacity", 1.f);
     shader.setUniform("model", glm::mat4(1.0f));
     shader.setUniform("projection", camera.getProjectionMatrix());
     shader.setUniform("view", camera.getViewMatrix());
     line->render();
 }
 
-void CubeSimulation::renderGravityLine(ShaderProgram &shader, const BaseCamera &camera) const
+void CubeSimulation::renderGravityLine(const ShaderProgram &shader, const BaseCamera &camera, bool showGravity) const
 {
+    if(!showGravity) return;
+
     auto q = Q * glm::vec3(cubeSize);
 
     auto model = glm::identity<glm::mat4>();
     model = glm::rotate(model, angleToStraighten, rotationAxisToStraighten);
     model = glm::translate(model, q / 2.f);
 
-    shader.Activate();
+    shader.setUniform("color", glm::vec3(1, 0, 0));
+    shader.setUniform("opacity", 1.f);
     shader.setUniform("model", model);
     shader.setUniform("projection", camera.getProjectionMatrix());
     shader.setUniform("view", camera.getViewMatrix());
@@ -206,6 +210,8 @@ void CubeSimulation::renderGravityLine(ShaderProgram &shader, const BaseCamera &
     model = glm::rotate(model, angleToStraighten, rotationAxisToStraighten);
 
     shader.setUniform("model", model);
+    shader.setUniform("color", glm::vec3(1, 1, 1));
+    shader.setUniform("opacity", 0.2f);
     glDisable(GL_DEPTH_TEST);
     gravityPlane->Draw();
     glEnable(GL_DEPTH_TEST);

@@ -36,12 +36,14 @@ void Scene::update() {
 void Scene::render() {
     appContext.frameBufferManager->bind();
 
-    appContext.cubeSimulation->renderLine(*basicShader, *appContext.camera);
-    appContext.cubeSimulation->renderGravityLine(*basicShader, *appContext.camera);
+    basicShader->Activate();
+    appContext.cubeSimulation->renderLine(*basicShader, *appContext.camera, appContext.showLine);
+    appContext.cubeSimulation->renderGravityLine(*basicShader, *appContext.camera, appContext.showGravity);
 
     grid->draw();
 
-    appContext.cubeSimulation->renderCube(*basicShader, *appContext.camera, *appContext.cube);
+    basicShader->Activate();
+    appContext.cubeSimulation->renderCube(*basicShader, *appContext.camera, *appContext.cube, appContext.showCube, appContext.showDiagonal);
 
 
     appContext.frameBufferManager->unbind();

@@ -78,11 +78,21 @@ Cube::Cube()
 
 }
 
-void Cube::render()
+void Cube::render(const ShaderProgram& shader, bool showCube, bool showDiagonal) const
 {
     glDisable(GL_DEPTH_TEST);
-    objectMesh->Draw();
-    axisMesh->Draw();
+    if(showCube)
+    {
+        shader.setUniform("color", glm::vec3(1, 215.f/255.f, 0));
+        shader.setUniform("opacity", 0.2f);
+        objectMesh->Draw();
+    }
+    if(showDiagonal)
+    {
+        shader.setUniform("color", glm::vec3(0, 1, 0));
+        shader.setUniform("opacity", 1.f);
+        axisMesh->Draw();
+    }
     glEnable(GL_DEPTH_TEST);
 }
 void Cube::update()

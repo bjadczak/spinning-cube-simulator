@@ -45,9 +45,9 @@ public:
 
     void updateTrace();
 
-    void renderCube(ShaderProgram& shader, const BaseCamera& camera, Cube& cube) const;
-    void renderLine(ShaderProgram& shader, const BaseCamera& camera) const;
-    void renderGravityLine(ShaderProgram& shader, const BaseCamera& camera) const;
+    void renderCube(const ShaderProgram& shader, const BaseCamera& camera, Cube& cube, bool showCube, bool showDiagonal) const;
+    void renderLine(const ShaderProgram& shader, const BaseCamera& camera, bool showLine) const;
+    void renderGravityLine(const ShaderProgram& shader, const BaseCamera& camera, bool showGravity) const;
 
     glm::vec3 dW_dt(glm::vec3 N, glm::vec3 W) const;
     static glm::quat dQ_dt(glm::quat Q, glm::vec3 W);

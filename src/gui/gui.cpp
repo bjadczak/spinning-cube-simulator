@@ -78,6 +78,11 @@ void Gui::showOptionWindow()
             if(changed) appContext.cubeSimulation->reset();
             ImGui::EndDisabled();
         }
+
+        ImGui::Checkbox("Show Cube", &appContext.showCube);
+        ImGui::Checkbox("Show Diagonal", &appContext.showDiagonal);
+        ImGui::Checkbox("Show Line", &appContext.showLine);
+        ImGui::Checkbox("Show Gravity", &appContext.showGravity);
     }
 
     ImGui::End();

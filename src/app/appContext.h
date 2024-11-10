@@ -26,6 +26,11 @@ struct AppContext {
 
     bool isRunning = false;
 
+    bool showCube = true;
+    bool showGravity = true;
+    bool showLine = true;
+    bool showDiagonal = true;
+
     bool guiFocus = true;
 
     float cameraSensitivity = 0.8f;
