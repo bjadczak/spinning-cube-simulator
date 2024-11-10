@@ -10,11 +10,14 @@
 #include "../camera/CameraAnchorFree.h"
 #include "../camera/CameraGameLike.h"
 #include "../framebufferManager/FrameBufferManager.h"
+#include "../objects/cube.h"
 
 struct AppContext {
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     std::unique_ptr<BaseCamera> camera;
     std::unique_ptr<FrameBufferManager> frameBufferManager;
+
+    std::unique_ptr<Cube> cube;
 
     CameraType cameraType;
 

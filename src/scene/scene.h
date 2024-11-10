@@ -15,6 +15,8 @@ class Scene {
 
     std::unique_ptr<GridModule> grid;
 
+    std::unique_ptr<ShaderProgram> basicShader;
+
 public:
     explicit Scene(AppContext &appContext, RenderContext &renderContext);
     void update();

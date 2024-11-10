@@ -77,6 +77,8 @@ add_executable(SpinningCube
         src/objectsOpenGL/EBO.cpp
         src/mesh/mesh.h
         src/mesh/mesh.cpp
+        src/objects/cube.cpp
+        src/objects/cube.h
 )
 
 # Link libraries
