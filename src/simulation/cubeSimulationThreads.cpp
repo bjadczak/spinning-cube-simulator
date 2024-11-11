@@ -2,17 +2,18 @@
 // Created by Bartosz Jadczak on 10/11/2024.
 //
 
-#include "cubeSimulation.h"
+#include "cubeSimulationThreads.h"
 
 #include <glm/gtc/quaternion.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
+#include <iostream>
 #include <glm/gtx/quaternion.hpp>
 #include "glm/gtx/string_cast.hpp"
 #include <glm/gtx/vector_angle.hpp> // For glm::angle
 
 
 
-CubeSimulation::CubeSimulation() {
+CubeSimulationWithThreads::CubeSimulationWithThreads() {
     cubeSize = 1;
     cubeDensity = 1;
     cubeTilt = 25.f;
@@ -20,7 +21,7 @@ CubeSimulation::CubeSimulation() {
     gravityOn = true;
     traceSize = 180;
     timeStepMs = 0.01;
-    type = CubeSimulationType::NONTHREAD;
+    type = CubeSimulationType::THREAD;
     {
         glm::vec3 originalVector(1.0f, 1.0f, 1.0f);
         glm::vec3 targetVector(0.0f, 1.0f, 0.0f);
@@ -72,61 +73,107 @@ CubeSimulation::CubeSimulation() {
     reset();
 }
 
-void CubeSimulation::reset() {
+void CubeSimulationWithThreads::reset() {
     const float cube2 = cubeSize*cubeSize;
     float itOff = - cube2 * cubeDensity / 4.f;
     float itDiag = 2.f * cube2 * cubeDensity / 3.f;
 
-    inertiaTensor = {
-        itDiag, itOff, itOff,
-        itOff, itDiag, itOff,
-        itOff, itOff, itDiag
-    };
-    inertiaTensorInverse = glm::inverse(inertiaTensor);
+    {
+        std::lock_guard<std::mutex> guard(dataMutex);
 
-    Q = glm::quat(1,1,1,1);
-    Q = glm::normalize(Q);
-    const glm::vec3 axis = glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f));
-    const glm::quat rotation = glm::angleAxis(glm::radians(cubeTilt), axis);
-    Q = rotation * Q;
+        inertiaTensor = {
+            itDiag, itOff, itOff,
+            itOff, itDiag, itOff,
+            itOff, itOff, itDiag
+        };
+        inertiaTensorInverse = glm::inverse(inertiaTensor);
 
-    W = glm::vec3{1,1,1};
-    W = glm::normalize(W)* cubeAngleVelocity;
+        Q = glm::quat(1,1,1,1);
+        Q = glm::normalize(Q);
+        const glm::vec3 axis = glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f));
+        const glm::quat rotation = glm::angleAxis(glm::radians(cubeTilt), axis);
+        Q = rotation * Q;
+
+        W = glm::vec3{1,1,1};
+        W = glm::normalize(W)* cubeAngleVelocity;
+    }
 
 }
 
-void CubeSimulation::advanceByStep() {
+void CubeSimulationWithThreads::advanceByStep() {
     float delta_t = timeStepMs / 1000.f;
     float half_delta_t = 0.5f * delta_t;
     float sixth_delta_t = delta_t / 6.0f;
+    glm::quat localQ;
+    glm::vec3 localW;
+    {
+        std::lock_guard<std::mutex> guard(dataMutex);
+        localQ = Q;
+        localW = W;
+    }
 
     // Calculate k1 step
-    glm::vec3 k1_v = dW_dt(getExternalForce(Q), W);
-    glm::quat q1 = dQ_dt(Q, W);
+    glm::vec3 k1_v = dW_dt(getExternalForce(localQ), localW);
+    glm::quat q1 = dQ_dt(localQ, localW);
 
     // Calculate k2 step
-    glm::vec3 W_k2 = W + half_delta_t * k1_v;
-    glm::vec3 k2_v = dW_dt(getExternalForce(Q), W_k2);
-    glm::quat q2 = dQ_dt(Q + half_delta_t * q1, W_k2);
+    glm::vec3 W_k2 = localW + half_delta_t * k1_v;
+    glm::vec3 k2_v = dW_dt(getExternalForce(localQ), W_k2);
+    glm::quat q2 = dQ_dt(localQ + half_delta_t * q1, W_k2);
 
     // Calculate k3 step
-    glm::vec3 W_k3 = W + half_delta_t * k2_v;
-    glm::vec3 k3_v = dW_dt(getExternalForce(Q), W_k3);
-    glm::quat q3 = dQ_dt(Q + half_delta_t * q2, W_k3);
+    glm::vec3 W_k3 = localW + half_delta_t * k2_v;
+    glm::vec3 k3_v = dW_dt(getExternalForce(localQ), W_k3);
+    glm::quat q3 = dQ_dt(localQ + half_delta_t * q2, W_k3);
 
     // Calculate k4 step
     glm::vec3 W_k4 = W + delta_t * k3_v;
-    glm::vec3 k4_v = dW_dt(getExternalForce(Q), W_k4);
-    glm::quat q4 = dQ_dt(Q + delta_t * q3, W_k4);
+    glm::vec3 k4_v = dW_dt(getExternalForce(localQ), W_k4);
+    glm::quat q4 = dQ_dt(localQ + delta_t * q3, W_k4);
 
-    // Update W and Q using weighted sums of k1, k2, k3, k4
-    W += sixth_delta_t * (k1_v + 2.0f * (k2_v + k3_v) + k4_v);
-    Q += (q1 + 2.0f * (q2 + q3) + q4) * sixth_delta_t;
-    Q = glm::normalize(Q);
+    {
+        std::lock_guard<std::mutex> guard(dataMutex);
+        // Update W and Q using weighted sums of k1, k2, k3, k4
+        W += sixth_delta_t * (k1_v + 2.0f * (k2_v + k3_v) + k4_v);
+        Q += (q1 + 2.0f * (q2 + q3) + q4) * sixth_delta_t;
+        Q = glm::normalize(Q);
+    }
 
 }
 
-glm::vec3 CubeSimulation::getExternalForce(const glm::quat Q) const {
+void CubeSimulationWithThreads::workerThread()
+{
+    static float time = std::chrono::system_clock::now().time_since_epoch().count();
+    while(isRunning)
+    {
+        while (loopsToDo > 0)
+        {
+            --loopsToDo;
+            advanceByStep();
+            time+=timeStepMs;
+        }
+    }
+}
+
+void CubeSimulationWithThreads::startThread()
+{
+    worker = std::thread(&CubeSimulationWithThreads::workerThread, this);
+    isRunning = true;
+}
+void CubeSimulationWithThreads::stopThread()
+{
+    isRunning = false;
+    if(worker.joinable())
+    {
+        worker.join();
+    }
+}
+void CubeSimulationWithThreads::addLoopsToDo(const int newLoops)
+{
+    loopsToDo += newLoops;
+}
+
+glm::vec3 CubeSimulationWithThreads::getExternalForce(const glm::quat Q) const {
     if(!gravityOn) return glm::vec3(0.0f);
 
     // Calculate middle point of cube
@@ -148,8 +195,13 @@ glm::vec3 CubeSimulation::getExternalForce(const glm::quat Q) const {
     return {qN.x, qN.y, qN.z};
 }
 
-void CubeSimulation::updateTrace() {
-    auto q = Q * glm::vec3(cubeSize);
+void CubeSimulationWithThreads::updateTrace() {
+    glm::vec3 q;
+    {
+        std::lock_guard<std::mutex> guard(dataMutex);
+        q = Q * glm::vec3(cubeSize);
+    }
+
     auto model = glm::identity<glm::mat4>();
 
     // Straighten up the cube
@@ -161,14 +213,7 @@ void CubeSimulation::updateTrace() {
     line->updatePoints(tracePoints);
 }
 
-void CubeSimulation::addLoopsToDo(int newLoops)
-{
-    for (int i = 0; i < newLoops; i++) {
-        advanceByStep();
-    }
-}
-
-void CubeSimulation::renderCube(const ShaderProgram& shader, const BaseCamera& camera, Cube& cube, bool showCube, bool showDiagonal)
+void CubeSimulationWithThreads::renderCube(const ShaderProgram& shader, const BaseCamera& camera, Cube& cube, bool showCube, bool showDiagonal)
 {
     auto model = glm::identity<glm::mat4>();
     model = model * glm::scale(model, glm::vec3(cubeSize));
@@ -176,14 +221,17 @@ void CubeSimulation::renderCube(const ShaderProgram& shader, const BaseCamera& c
     // Straighten up the cube
     model = glm::rotate(model, angleToStraighten, rotationAxisToStraighten);
 
-    model = model * glm::toMat4(Q);
+    {
+        std::lock_guard<std::mutex> guard(dataMutex);
+        model = model * glm::toMat4(Q);
+    }
     shader.setUniform("model", model);
     shader.setUniform("projection", camera.getProjectionMatrix());
     shader.setUniform("view", camera.getViewMatrix());
     cube.render(shader, showCube, showDiagonal);
 }
 
-void CubeSimulation::renderLine(const ShaderProgram &shader, const BaseCamera &camera, bool showLine) const
+void CubeSimulationWithThreads::renderLine(const ShaderProgram &shader, const BaseCamera &camera, bool showLine) const
 {
     if(!showLine) return;
     shader.setUniform("color", glm::vec3(1, 1, 1));
@@ -194,12 +242,14 @@ void CubeSimulation::renderLine(const ShaderProgram &shader, const BaseCamera &c
     line->render();
 }
 
-void CubeSimulation::renderGravityLine(const ShaderProgram &shader, const BaseCamera &camera, bool showGravity)
+void CubeSimulationWithThreads::renderGravityLine(const ShaderProgram &shader, const BaseCamera &camera, bool showGravity)
 {
     if(!showGravity) return;
-
-    auto q = Q * glm::vec3(cubeSize);
-
+    glm::vec3 q;
+    {
+        std::lock_guard<std::mutex> guard(dataMutex);
+        q = Q * glm::vec3(cubeSize);
+    }
     auto model = glm::identity<glm::mat4>();
     model = glm::rotate(model, angleToStraighten, rotationAxisToStraighten);
     model = glm::translate(model, q / 2.f);
@@ -225,11 +275,11 @@ void CubeSimulation::renderGravityLine(const ShaderProgram &shader, const BaseCa
 }
 
 
-glm::vec3 CubeSimulation::dW_dt(const glm::vec3 N, const glm::vec3 W) const
+glm::vec3 CubeSimulationWithThreads::dW_dt(const glm::vec3 N, const glm::vec3 W) const
 {
     return inertiaTensorInverse * (N + glm::cross(inertiaTensor * W, W) );
 }
 
-glm::quat CubeSimulation::dQ_dt(const glm::quat Q, const glm::vec3 W) {
+glm::quat CubeSimulationWithThreads::dQ_dt(const glm::quat Q, const glm::vec3 W) {
     return Q * glm::quat(0, W / 2.f);
 }

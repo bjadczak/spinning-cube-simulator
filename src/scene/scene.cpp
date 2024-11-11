@@ -15,7 +15,7 @@ Scene::Scene(AppContext &appContext, RenderContext &renderContext) :
     grid = std::make_unique<GridModule>(appContext);
 
     appContext.cube = std::make_unique<Cube>();
-    appContext.cubeSimulation = std::make_unique<CubeSimulation>();
+    appContext.allocateCubeSimulation(CubeSimulationType::THREAD);
     appContext.lastFrameTimeMs = glfwGetTime();
 }
 
@@ -24,9 +24,7 @@ void Scene::update() {
         float timeMs = glfwGetTime() * 1000;
         int loopsToDo = static_cast<int>((timeMs - appContext.lastFrameTimeMs) / appContext.cubeSimulation->timeStepMs);
         appContext.lastFrameTimeMs += loopsToDo * appContext.cubeSimulation->timeStepMs;
-        for (int i = 0; i < loopsToDo; i++) {
-            appContext.cubeSimulation->advanceByStep();
-        }
+        appContext.cubeSimulation->addLoopsToDo(loopsToDo);
         appContext.cubeSimulation->updateTrace();
     } else {
         appContext.lastFrameTimeMs = glfwGetTime() * 1000.f;
@@ -36,20 +34,22 @@ void Scene::update() {
 void Scene::render() {
     appContext.frameBufferManager->bind();
 
-    basicShader->Activate();
-    appContext.cubeSimulation->renderLine(*basicShader, *appContext.camera, appContext.showLine);
-    appContext.cubeSimulation->renderGravityLine(*basicShader, *appContext.camera, appContext.showGravity);
+    if(appContext.cubeSimulation != nullptr)
+    {
+        basicShader->Activate();
+        appContext.cubeSimulation->renderLine(*basicShader, *appContext.camera, appContext.showLine);
+        appContext.cubeSimulation->renderGravityLine(*basicShader, *appContext.camera, appContext.showGravity);
+        appContext.cubeSimulation->renderCube(*basicShader, *appContext.camera, *appContext.cube, appContext.showCube, appContext.showDiagonal);
+
+    }
 
     grid->draw();
-
-    basicShader->Activate();
-    appContext.cubeSimulation->renderCube(*basicShader, *appContext.camera, *appContext.cube, appContext.showCube, appContext.showDiagonal);
-
 
     appContext.frameBufferManager->unbind();
 }
 
 void Scene::destroy() {
+    appContext.cubeSimulation->stopThread();
     grid->destroy();
     basicShader->Delete();
 }

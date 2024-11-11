@@ -20,6 +20,7 @@ class Gui {
     void showOptionWindow();
     void showScene() const;
     void showCameraModeDropDown() const;
+    void showSimulationModeDropDown() const;
 
 public:
     explicit Gui(AppContext &appContext, RenderContext &renderContext);

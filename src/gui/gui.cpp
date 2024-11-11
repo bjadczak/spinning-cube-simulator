@@ -57,6 +57,7 @@ void Gui::showOptionWindow()
       * Simulation options
       */
         ImGui::SeparatorText("Simulation");
+        showSimulationModeDropDown();
         ImGui::Checkbox("Run", &appContext.isRunning);
         if(ImGui::Button("Reset"))
         {
@@ -190,6 +191,32 @@ void Gui::showCameraModeDropDown() const {
             if (ImGui::Selectable(cameraModes[i], isSelected)) {
                 // Call allocateCamera to set the mode
                 appContext.allocateCamera(static_cast<CameraType>(i));
+            }
+
+            // Set the focus to the selected item
+            if (isSelected) {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+        ImGui::EndCombo();
+    }
+}
+
+void Gui::showSimulationModeDropDown() const
+{
+    // Create a label for the dropdown
+    const char* simulationModes[] = { "Thread", "Non thread" };
+
+    // Create the ImGui dropdown combo box
+    if (ImGui::BeginCombo("Simulation Mode", simulationModes[appContext.cubeSimulation->type])) {
+        for (int i = 0; i < IM_ARRAYSIZE(simulationModes); i++) {
+            bool isSelected = (appContext.cubeSimulation->type == i);
+
+            // Create selectable items for the dropdown
+            if (ImGui::Selectable(simulationModes[i], isSelected)) {
+                // Call allocateCamera to set the mode
+                appContext.isRunning = false;
+                appContext.allocateCubeSimulation(static_cast<CubeSimulationType>(i));
             }
 
             // Set the focus to the selected item

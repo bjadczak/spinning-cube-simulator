@@ -12,6 +12,7 @@
 #include "../framebufferManager/FrameBufferManager.h"
 #include "../objects/cube.h"
 #include "../simulation/cubeSimulation.h"
+#include "../simulation/cubeSimulationThreads.h"
 
 struct AppContext {
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -19,10 +20,11 @@ struct AppContext {
     std::unique_ptr<FrameBufferManager> frameBufferManager;
 
     std::unique_ptr<Cube> cube;
-    std::unique_ptr<CubeSimulation> cubeSimulation;
+    std::unique_ptr<CubeSimulationBase> cubeSimulation;
     float lastFrameTimeMs;
 
     CameraType cameraType;
+    CubeSimulationType cubeSimulationType;
 
     bool isRunning = false;
 
@@ -63,6 +65,38 @@ struct AppContext {
             break;
             default:
                 throw std::invalid_argument("Invalid camera type");
+
+        }
+    }
+
+    /*
+ *  Allocation of complex attribute Camera
+ */
+    void allocateCubeSimulation(const CubeSimulationType setType)
+    {
+        cubeSimulationType = setType;
+        switch(setType)
+        {
+            case CubeSimulationType::THREAD:
+                if(cubeSimulation != nullptr)
+                {
+                    cubeSimulation->stopThread();
+                    cubeSimulation.reset();
+                }
+                cubeSimulation = std::make_unique<CubeSimulationWithThreads>();
+                cubeSimulation->startThread();
+                break;
+            case CubeSimulationType::NONTHREAD:
+                if(cubeSimulation != nullptr)
+                {
+                    cubeSimulation->stopThread();
+                    cubeSimulation.reset();
+                }
+                cubeSimulation = std::make_unique<CubeSimulation>();
+                cubeSimulation->startThread();
+                break;
+            default:
+                throw std::invalid_argument("Invalid simulation type");
 
         }
     }
