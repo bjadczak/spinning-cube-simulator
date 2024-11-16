@@ -92,7 +92,6 @@ void CubeSimulation::reset() {
 
     W = glm::vec3{1,1,1};
     W = glm::normalize(W)* cubeAngleVelocity;
-
 }
 
 void CubeSimulation::advanceByStep() {
